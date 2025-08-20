@@ -30,3 +30,11 @@ dependencies {
     'ox_doorlock',
     'ps-dispatch'
 }
+
+escrow_ignore {
+    'client.lua',
+    'server.lua',
+    'config.lua',
+    'utils.lua',
+    'bootstrap.lua'
+}
