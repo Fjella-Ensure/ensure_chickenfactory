@@ -50,7 +50,7 @@ else
   -- CLIENT: sync carry state once the player is ready, with event hooks and a small fallback
   local function sync()
     print("player looks ready so i am asking the server to sync my carry state")
-    TriggerServerEvent("fjella:carry:sync")
+    TriggerServerEvent("ensure_chickenfactory:carry:sync")
   end
 
   AddEventHandler("QBCore:Client:OnPlayerLoaded", sync)

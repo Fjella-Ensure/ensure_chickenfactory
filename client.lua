@@ -31,7 +31,7 @@ CreateThread(function()
     label = label,
     onSelect = function()
       print('MissionPed: player clicked "'..label..'". starting the mission (sending event to server).')
-      TriggerServerEvent('fjella:mission:start')
+      TriggerServerEvent('ensure_chickenfactory:mission:start')
     end
   }})
   print('MissionPed: target registered. ready when you are.')
@@ -74,7 +74,7 @@ CreateThread(function()
     label = label,
     onSelect = function()
       print(('Snitch: player wants the tea for $%d. buying info (sending event to server).'):format(price))
-      TriggerServerEvent('fjella:snitch:buy')
+      TriggerServerEvent('ensure_chickenfactory:snitch:buy')
     end
   }})
   print('Snitch: target registered. ready to spill.')
@@ -82,7 +82,7 @@ end)
 
 
 -- PD alert blip (silent route for 30s)
-RegisterNetEvent('fjella:pd:alert', function(coords)
+RegisterNetEvent('ensure_chickenfactory:pd:alert', function(coords)
   if not coords then
     print('PD Alert: got no coords nothing to ping')
     return
@@ -115,7 +115,7 @@ end)
 
 
 --  Phase 1 show door interaction zones 
-RegisterNetEvent('fjella:phase1:targets', function()
+RegisterNetEvent('ensure_chickenfactory:phase1:targets', function()
   local big = Config.Doors.Big
   local small = Config.Doors.Small
 
@@ -134,7 +134,7 @@ RegisterNetEvent('fjella:phase1:targets', function()
       icon = 'fas fa-bomb', label = 'Place C4',
       onSelect = function()
         print('player selected place c4 on big door')
-        TriggerServerEvent('fjella:door:use', 'Big')
+        TriggerServerEvent('ensure_chickenfactory:door:use', 'Big')
       end
     }}
   })
@@ -147,7 +147,7 @@ RegisterNetEvent('fjella:phase1:targets', function()
       icon = 'fas fa-burn', label = 'Use Thermite',
       onSelect = function()
         print('player selected use thermite on small door')
-        TriggerServerEvent('fjella:door:use', 'Small')
+        TriggerServerEvent('ensure_chickenfactory:door:use', 'Small')
       end
     }}
   })
@@ -159,7 +159,7 @@ end)
 
 
 -- Door FX / thermite FX 
-RegisterNetEvent('fjella:doorFx', function(doorKey, ms)
+RegisterNetEvent('ensure_chickenfactory:doorFx', function(doorKey, ms)
   local cfg = Config.Doors[doorKey]; if not cfg then return end
   local ped = PlayerPedId()
   SetEntityHeading(ped, (cfg.anim and cfg.anim.heading) or 0.0)
@@ -199,7 +199,7 @@ RegisterNetEvent('fjella:doorFx', function(doorKey, ms)
 end)
 
 
-RegisterNetEvent('fjella:thermiteFx', function(pos)
+RegisterNetEvent('ensure_chickenfactory:thermiteFx', function(pos)
   local function r(v) return math.floor((v or 0) + 0.5) end
   print(('thermite fx start at x %s y %s z %s'):format(r(pos.x), r(pos.y), r(pos.z)))
 
@@ -218,7 +218,7 @@ RegisterNetEvent('fjella:thermiteFx', function(pos)
   print('thermite burn effect stopped')
 end)
 
-RegisterNetEvent('fjella:bigdoor:boom', function(pos)
+RegisterNetEvent('ensure_chickenfactory:bigdoor:boom', function(pos)
   if not pos then
     print('big door boom aborted missing position')
     return
@@ -326,7 +326,7 @@ end
 
 
 -- Per-guard setup from server (sent only to the net owner)
-RegisterNetEvent('fjella:guard:setup', function(netId, ai, weapon, exemptIds)
+RegisterNetEvent('ensure_chickenfactory:guard:setup', function(netId, ai, weapon, exemptIds)
   print(('guard setup request for net id %s'):format(tostring(netId)))
   setExempt(exemptIds)
   local rel = ensureGuardGroup()
@@ -431,7 +431,7 @@ CreateThread(function()
 end)
 
 local crateZoneId = nil
-RegisterNetEvent('fjella:phase2:crateZone', function(coords, radius, searchMs)
+RegisterNetEvent('ensure_chickenfactory:phase2:crateZone', function(coords, radius, searchMs)
   if crateZoneId then
     exports.ox_target:removeZone(crateZoneId)
     crateZoneId = nil
@@ -443,7 +443,7 @@ RegisterNetEvent('fjella:phase2:crateZone', function(coords, radius, searchMs)
       onSelect=function()
         print('player started searching the crate')
         lib.progressBar({ duration = searchMs or 3000, label = 'Searching...', canCancel=false, disable={move=true,car=true,combat=true} })
-        TriggerServerEvent('fjella:crate:search')
+        TriggerServerEvent('ensure_chickenfactory:crate:search')
         print('crate search finished and server event sent')
       end
     }}
@@ -451,7 +451,7 @@ RegisterNetEvent('fjella:phase2:crateZone', function(coords, radius, searchMs)
   print('crate zone is now active')
 end)
 
-RegisterNetEvent('fjella:phase2:removeCrateZone', function()
+RegisterNetEvent('ensure_chickenfactory:phase2:removeCrateZone', function()
   if crateZoneId then
     exports.ox_target:removeZone(crateZoneId)
     crateZoneId=nil
@@ -462,7 +462,7 @@ RegisterNetEvent('fjella:phase2:removeCrateZone', function()
 end)
 
 -- Buyer UI (cosmetic ped + target, server is authoritative) 
-RegisterNetEvent('fjella:buyer:spawn', function(coords, endsAt)
+RegisterNetEvent('ensure_chickenfactory:buyer:spawn', function(coords, endsAt)
   print('buyer spawned go sell the goods')
   lib.notify({ title='Buyer', description='Go to buyer, quickly!', type='inform' })
   SetNewWaypoint(coords.x + 0.0, coords.y + 0.0)
@@ -476,7 +476,7 @@ RegisterNetEvent('fjella:buyer:spawn', function(coords, endsAt)
     onSelect=function()
       print('player is selling the box now')
       lib.progressBar({ label='Selling...', duration=1500, canCancel=false, disable={move=true,car=true,combat=true} })
-      TriggerServerEvent('fjella:buyer:sell')
+      TriggerServerEvent('ensure_chickenfactory:buyer:sell')
       print('sell request was sent to the server')
     end
   }})
@@ -490,7 +490,7 @@ RegisterNetEvent('fjella:buyer:spawn', function(coords, endsAt)
   end)
 end)
 
-RegisterNetEvent('fjella:buyer:expire', function()
+RegisterNetEvent('ensure_chickenfactory:buyer:expire', function()
   print('buyer window expired that was too slow')
   lib.notify({ title='Buyer', description='Too late. He left.', type='error' })
 end)
@@ -548,12 +548,12 @@ AddStateBagChangeHandler('carryBox', nil, function(bagName, _key, value, _replic
 end)
 
 -- Snitch UI feedback 
-RegisterNetEvent('fjella:snitch:status', function(_, message)
+RegisterNetEvent('ensure_chickenfactory:snitch:status', function(_, message)
   print('snitch status update received')
   lib.notify({ title = Config.Snitch.smsFrom or 'Snitch', description = message or 'OK', type='inform' })
 end)
 
-RegisterNetEvent('fjella:snitch:notify', function(message)
+RegisterNetEvent('ensure_chickenfactory:snitch:notify', function(message)
   print('snitch sent a heads up')
   lib.notify({ title = Config.Snitch.smsFrom or 'Snitch', description = message or (Config.Snitch.smsText or 'Movement!'), type='warning', duration = 8000 })
 end)

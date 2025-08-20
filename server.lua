@@ -194,7 +194,7 @@ end
 
 
 -- Mission start 
-RegisterNetEvent('fjella:mission:start', function()
+RegisterNetEvent('ensure_chickenfactory:mission:start', function()
   local src = source
   local name = GetPlayerName(src) or ("id " .. tostring(src))
   print(("player %s asked to start the mission"):format(name))
@@ -227,7 +227,7 @@ RegisterNetEvent('fjella:mission:start', function()
   print(("session created for %s phase one set"):format(name))
 
   TriggerClientEvent('ox_lib:notify', src, { description = 'Infiltrate the factory!', type = 'inform' })
-  TriggerClientEvent('fjella:phase1:targets', src)
+  TriggerClientEvent('ensure_chickenfactory:phase1:targets', src)
   print(("sent phase one targets to %s"):format(name))
 
   -- Silent route: alert exempt services (police BCSO LEO ambulance)
@@ -236,21 +236,21 @@ RegisterNetEvent('fjella:mission:start', function()
     local sid = tonumber(id)
     local job = U.getJob(sid)
     if job and EXEMPT_JOBS[string.lower(job)] then
-      TriggerClientEvent('fjella:pd:alert', sid, Config.Doors.Big.target)
+      TriggerClientEvent('ensure_chickenfactory:pd:alert', sid, Config.Doors.Big.target)
       sent = sent + 1
     end
   end
   print(("silent alert sent to %d responders"):format(sent))
 
   -- Notify any players who prepaid the snitch
-  TriggerEvent('fjella:mission:notifySnitches')
+  TriggerEvent('ensure_chickenfactory:mission:notifySnitches')
   print("snitches have been pinged")
 end)
 
 
 
 -- Doors (server authoritative) 
-RegisterNetEvent('fjella:door:use', function(doorKey)
+RegisterNetEvent('ensure_chickenfactory:door:use', function(doorKey)
   local src = source
   local name = GetPlayerName(src) or ("id " .. tostring(src))
   print(("player %s is trying to use the %s door"):format(name, tostring(doorKey)))
@@ -297,7 +297,7 @@ RegisterNetEvent('fjella:door:use', function(doorKey)
   end
 
   print(("player %s started planting on the %s door"):format(name, tostring(doorKey)))
-  TriggerClientEvent('fjella:doorFx', src, doorKey, cfg.progressMs or 5000)
+  TriggerClientEvent('ensure_chickenfactory:doorFx', src, doorKey, cfg.progressMs or 5000)
 
   if doorKey == 'Big' and (cfg.pdDispatchDelayMs or 0) > 0 then
     print(("pd ping for big door will go out in %d ms"):format(cfg.pdDispatchDelayMs))
@@ -317,25 +317,25 @@ RegisterNetEvent('fjella:door:use', function(doorKey)
       print("planting finished on the big door waiting five seconds before boom")
       SetTimeout(5000, function()
         print("boom time for the big door")
-        TriggerClientEvent('fjella:bigdoor:boom', -1, cfg.explosion)
+        TriggerClientEvent('ensure_chickenfactory:bigdoor:boom', -1, cfg.explosion)
         SetTimeout(500, function()
           exports.ox_doorlock:setDoorState(cfg.doorId, false)
           setPhase(src, 2)
           print(("big door unlocked phase two started for %s"):format(name))
           TriggerClientEvent('ox_lib:notify', src, { description = 'Breach successful. Find the crate!', type='inform' })
-          TriggerEvent('fjella:phase2:start')
+          TriggerEvent('ensure_chickenfactory:phase2:start')
         end)
       end)
     else
       if cfg.burnFx then
         print(("thermite visuals started for the small door by %s"):format(name))
-        TriggerClientEvent('fjella:thermiteFx', -1, cfg.burnFx)
+        TriggerClientEvent('ensure_chickenfactory:thermiteFx', -1, cfg.burnFx)
       end
       exports.ox_doorlock:setDoorState(cfg.doorId, false)
       setPhase(src, 2)
       print(("small door unlocked phase two started for %s"):format(name))
       TriggerClientEvent('ox_lib:notify', src, { description = 'Breach successful. Find the crate!', type='inform' })
-      TriggerEvent('fjella:phase2:start')
+      TriggerEvent('ensure_chickenfactory:phase2:start')
     end
   end)
 end)
@@ -440,7 +440,7 @@ local function pushGuardSetupToOwner(netId, ai, weapon, exemptIds)
       print("net sync lock native not available on this build, rolling without it")
     end
 
-    TriggerClientEvent('fjella:guard:setup', owner, netId, ai or {}, weapon or 0, exemptIds or {})
+    TriggerClientEvent('ensure_chickenfactory:guard:setup', owner, netId, ai or {}, weapon or 0, exemptIds or {})
     print(("pinged %s to set up their guard %s client-side"):format(ownerName, netStr))
     return
   end
@@ -466,7 +466,7 @@ local function pushGuardSetupToOwner(netId, ai, weapon, exemptIds)
     if SetNetworkIdSyncToPlayer then
       SetNetworkIdSyncToPlayer(netId, winner, true)
     end
-    TriggerClientEvent('fjella:guard:setup', winner, netId, ai or {}, weapon or 0, exemptIds or {})
+    TriggerClientEvent('ensure_chickenfactory:guard:setup', winner, netId, ai or {}, weapon or 0, exemptIds or {})
     print(("no native owner for guard %s, so i gave it to %s at ~%.1fm away"):format(netStr, winnerName, bestDist))
   else
     print(("no owner for guard %s and nobody around to claim it yet, leaving it for the watcher to retry"):format(netStr))
@@ -478,7 +478,7 @@ end
 
 
 -- spawn wave + hand off per-guard setup to owners
-AddEventHandler('fjella:phase2:start', function()
+AddEventHandler('ensure_chickenfactory:phase2:start', function()
   print("phase two is starting i am cleaning up any leftover guards")
   despawnGuards()
 
@@ -502,13 +502,13 @@ AddEventHandler('fjella:phase2:start', function()
 
   print(("finished spawning i see %d active guards"):format(spawned))
 
-  TriggerClientEvent('fjella:phase2:crateZone', -1, Config.Crate.coords, Config.Crate.radius, Config.Crate.searchMs)
+  TriggerClientEvent('ensure_chickenfactory:phase2:crateZone', -1, Config.Crate.coords, Config.Crate.radius, Config.Crate.searchMs)
   print(("told players to show the crate search area at %.2f %.2f %.2f"):format(
     Config.Crate.coords.x, Config.Crate.coords.y, Config.Crate.coords.z))
 
   SetTimeout(Config.Phase2Timeout or (20 * 60 * 1000), function()
     print("the phase two timer ran out i am calling cleanup now")
-    TriggerEvent('fjella:phase2:cleanup')
+    TriggerEvent('ensure_chickenfactory:phase2:cleanup')
   end)
 
   if not ownerWatchStarted then
@@ -534,7 +534,7 @@ AddEventHandler('fjella:phase2:start', function()
                 local name = GetPlayerName(owner) or ("id " .. tostring(owner))
                 print(("guard %s switched owner handing setup to %s"):format(tostring(netId), name))
                 guardOwner[netId] = owner
-                TriggerClientEvent('fjella:guard:setup', owner, netId, ai2, 0, exempt2)
+                TriggerClientEvent('ensure_chickenfactory:guard:setup', owner, netId, ai2, 0, exempt2)
               end
             end
           end
@@ -547,13 +547,13 @@ AddEventHandler('fjella:phase2:start', function()
   end
 end)
 
-AddEventHandler('fjella:phase2:cleanup', function()
+AddEventHandler('ensure_chickenfactory:phase2:cleanup', function()
   print("phase two cleanup requested i am removing guards and hiding the crate zone")
   despawnGuards()
-  TriggerClientEvent('fjella:phase2:removeCrateZone', -1)
+  TriggerClientEvent('ensure_chickenfactory:phase2:removeCrateZone', -1)
 end)
 
-RegisterNetEvent('fjella:crate:search', function()
+RegisterNetEvent('ensure_chickenfactory:crate:search', function()
   local src = source
   if not ratelimit(src, 'crate', 800, 8) then
     print(("crate search was spammed by %s i am ignoring this one"):format(GetPlayerName(src) or tostring(src)))
@@ -581,13 +581,13 @@ RegisterNetEvent('fjella:crate:search', function()
     setBox(src, true)
     U.setCarryState(src, true)
     TriggerClientEvent('ox_lib:notify', src, { description = 'You found a box.', type='success' })
-    TriggerEvent('fjella:buyer:start', src)
+    TriggerEvent('ensure_chickenfactory:buyer:start', src)
   else
     print(("%s tried to get the box but the inventory call failed"):format(name))
   end
 end)
 
-RegisterNetEvent('fjella:buyer:start', function(targetSrc)
+RegisterNetEvent('ensure_chickenfactory:buyer:start', function(targetSrc)
   local src = targetSrc or source
   local name = GetPlayerName(src) or tostring(src)
   local buyerSessions = {}
@@ -606,19 +606,19 @@ RegisterNetEvent('fjella:buyer:start', function(targetSrc)
   buyerSessions[src] = true
 
   print(("%s got a buyer window i will keep it open for a short while"):format(name))
-  TriggerClientEvent('fjella:buyer:spawn', src, Config.Buyer.coords, ends)
+  TriggerClientEvent('ensure_chickenfactory:buyer:spawn', src, Config.Buyer.coords, ends)
 
   SetTimeout((Config.Buyer.windowMs or 300000) + 150, function()
     local s = sessions[src]
     if s and s.buyerActive then
       print(("%s missed the buyer window so i closed it"):format(name))
       s.buyerActive = false; buyerSessions[src] = nil
-      TriggerClientEvent('fjella:buyer:expire', src)
+      TriggerClientEvent('ensure_chickenfactory:buyer:expire', src)
     end
   end)
 end)
 
-RegisterNetEvent('fjella:buyer:sell', function()
+RegisterNetEvent('ensure_chickenfactory:buyer:sell', function()
   local src = source
   local name = GetPlayerName(src) or tostring(src)
 
@@ -655,17 +655,17 @@ RegisterNetEvent('fjella:buyer:sell', function()
 
   completeAndCooldown(src)
   print(("%s completed the mission i set the cooldown and started cleanup"):format(name))
-  TriggerEvent('fjella:phase2:cleanup')
+  TriggerEvent('ensure_chickenfactory:phase2:cleanup')
 end)
 
-RegisterNetEvent('fjella:snitch:buy', function()
+RegisterNetEvent('ensure_chickenfactory:snitch:buy', function()
   if not (Config.Snitch and Config.Snitch.enabled) then return end
   local src = source
   local name = GetPlayerName(src) or tostring(src)
 
   if snitchPaid[src] then
     print(("%s tried to pay the snitch again but they already did"):format(name))
-    TriggerClientEvent('fjella:snitch:status', src, true, 'You already paid the snitch for this mission.')
+    TriggerClientEvent('ensure_chickenfactory:snitch:status', src, true, 'You already paid the snitch for this mission.')
     return
   end
   local price = Config.Snitch.price or 100
@@ -676,20 +676,20 @@ RegisterNetEvent('fjella:snitch:buy', function()
   end
   snitchPaid[src] = true
   print(("%s paid the snitch and will get a heads up when things move"):format(name))
-  TriggerClientEvent('fjella:snitch:status', src, true, 'The snitch will text you if something happens.')
+  TriggerClientEvent('ensure_chickenfactory:snitch:status', src, true, 'The snitch will text you if something happens.')
 end)
 
-AddEventHandler('fjella:mission:notifySnitches', function()
+AddEventHandler('ensure_chickenfactory:mission:notifySnitches', function()
   if not (Config.Snitch and Config.Snitch.enabled) then return end
   local count = 0
   for _ in pairs(snitchPaid) do count = count + 1 end
   print(("%d players paid the snitch i am sending out the warning"):format(count))
   for src, _ in pairs(snitchPaid) do
-    TriggerClientEvent('fjella:snitch:notify', src, Config.Snitch.smsText or 'Movement at the factory!')
+    TriggerClientEvent('ensure_chickenfactory:snitch:notify', src, Config.Snitch.smsText or 'Movement at the factory!')
   end
 end)
 
-RegisterNetEvent('fjella:carry:sync', function()
+RegisterNetEvent('ensure_chickenfactory:carry:sync', function()
   local src = source
   local name = GetPlayerName(src) or tostring(src)
   local has = U.hasItem(src, Config.Crate.item, 1)
@@ -698,7 +698,7 @@ RegisterNetEvent('fjella:carry:sync', function()
   U.setCarryState(src, has)
   if has then
     print(("%s still has the box so i am reopening the buyer window"):format(name))
-    TriggerEvent('fjella:buyer:start', src)
+    TriggerEvent('ensure_chickenfactory:buyer:start', src)
   end
 end)
 
